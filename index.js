@@ -1,3 +1,4 @@
+const config = require('./utils/config')
 const http = require('http')
 const express = require('express')
 const app = express()
@@ -13,8 +14,7 @@ const blogSchema = new mongoose.Schema({
 
 const Blog = mongoose.model('Blog', blogSchema)
 
-const mongoUrl = 'mongodb+srv://usuario:usuarioatlas@cluster0.cnu3hij.mongodb.net/blogs-list?retryWrites=true&w=majority'
-mongoose.connect(mongoUrl)
+mongoose.connect(config.MONGODB_URI)
 
 app.use(cors())
 app.use(express.json())
@@ -37,7 +37,6 @@ app.post('/api/blogs', (request, response) => {
     })
 })
 
-const PORT = 3003
-app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`)
+app.listen(config.PORT, () => {
+  console.log(`Server running on port ${config.PORT}`)
 })
