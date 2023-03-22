@@ -11,7 +11,7 @@ const mongoose = require('mongoose')
 const Blog = require('./models/blog')
 const blogRouter = require('./controllers/blog')
 const userRouter = require('./controllers/user')
-
+const loginRouter = require('./controllers/login')
 
 mongoose.connect(config.MONGODB_URI)
 
@@ -26,6 +26,7 @@ morgan.token('bodyRequest', (request, response)=>{
 // Y llamamos al middleware Morgan con un mensaje formateado con los tokkens que queremos
 app.use(morgan(':method :url :status :res[content-length] - :response-time ms :bodyRequest'))
 
+app.use('/api/login', loginRouter)
 app.use('/api/blogs', blogRouter)
 app.use('/api/users', userRouter)
 
