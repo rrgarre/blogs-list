@@ -21,11 +21,10 @@ blogRouter.post('/', async (request, response) => {
   let decodedToken
   try {
     decodedToken = jwt.verify(token, util.SECRET_FOR_JWT)
+    console.log(decodedToken)
   }catch (error) {
     return response.status(401).json({error:"Sesion expirada"})
   }
-
-  console.log(decodedToken)
   
   if(!(decodedToken && decodedToken.username))
     return response.status(401).json({error: "No autorizado"})
@@ -34,10 +33,10 @@ blogRouter.post('/', async (request, response) => {
   const blog = new Blog({
     title: body.title,
     // author: body.author,
-    author: user.name,
+    author: decodedToken.username,
     url: body.url,
     likes: body.likes,
-    user: user._id
+    user: decodedToken._id
   })  
 
   const savedBlog = await blog.save()
