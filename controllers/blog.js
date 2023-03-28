@@ -12,8 +12,9 @@ blogRouter.get('/', async (request, response) => {
 blogRouter.post('/', async (request, response) => {
 
   const body = request.body
-  const token = getToken(request)
-  console.log('TOKEN ', token)
+  // const token = getToken(request)
+  // Gracias al middleware "extractorToken", el token viene PARSEADO en la request
+  const token = request.token
   
   if(!token)
     return response.status(401).json({error:"No autorizado"})
@@ -49,6 +50,8 @@ blogRouter.post('/', async (request, response) => {
 
 // FUNCION PARA EXTRAER EL TOKEN DE LA REQUEST
 const getToken = (request) => {
+  console.log('XXX: Desde funcion aparte')
+  
   const requestToken = request.get('authorization')
   if(requestToken && requestToken.toLowerCase().startsWith('bearer '))
     return requestToken.substring(7)
