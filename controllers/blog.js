@@ -53,29 +53,24 @@ blogRouter.post('/', extractorUser, async (request, response) => {
   response.status(200).json(savedBlog)
 })
 
+// Actualizar Likes
+blogRouter.put('/:id', extractorUser , async (request, response) => {
+  const body = request.body
+
+  try {
+    const savedBlog = await Blog.findByIdAndUpdate(body._id, body, {new:true})
+    response.status(200).json(savedBlog)
+  } catch (error) {
+    response.status(401).json({error:"No es posible actualizar los likes"})
+  }
+  response.status(401).end()
+})
+
+// Borrar blog
 blogRouter.delete('/:id', extractorUser, async (request, response) => {
   const id = request.params.id
   console.log('1', id)
   
-  ///////////////////// Logica del TOKEN /////////////////////////////////
-  // Gracias al middleware "extractorToken", el token viene PARSEADO en la request
-  // const token = request.token
-  
-  // if(!token)
-  //   return response.status(401).json({error:"No autorizado"})
-  
-  // let decodedToken
-  // try {
-  //   decodedToken = jwt.verify(token, util.SECRET_FOR_JWT)
-  //   console.log(decodedToken)
-  // }catch (error) {
-  //   return response.status(401).json({error:"Sesion expirada"})
-  // }
-  
-  // if(!(decodedToken && decodedToken.username))
-  //   return response.status(401).json({error: "No autorizado"})
-  // const user = await User.findOne({username: decodedToken.username})
-  ///////////////////// Logica del TOKEN /////////////////////////////////
   const user = request.user
 
   console.log('USUARIO EXTRAIDO: ', user)
