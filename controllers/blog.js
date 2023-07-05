@@ -1,6 +1,7 @@
 const blogRouter = require('express').Router()
 const util = require('../utils/config')
 const jwt = require('jsonwebtoken')
+const extractorUser = require('../middlewares/extractorUser')
 const Blog = require('../models/blog')
 const User = require('../models/user')
 
@@ -9,35 +10,39 @@ blogRouter.get('/', async (request, response) => {
   response.status(200).json(blogs)
 })
 
-blogRouter.post('/', async (request, response) => {
+blogRouter.post('/', extractorUser, async (request, response) => {
 
   const body = request.body
-  const token = getToken(request)
-  console.log('TOKEN ', token)
   
-  if(!token)
-    return response.status(401).json({error:"No autorizado"})
+  // Gracias al middleware "extractorToken", el token viene PARSEADO en la request
+  // const token = request.token
+  // console.log('Token desde Blog controller: ', token)
   
-  let decodedToken
-  try {
-    decodedToken = jwt.verify(token, util.SECRET_FOR_JWT)
-  }catch (error) {
-    return response.status(401).json({error:"Sesion expirada"})
-  }
+  
+  // if(!token)
+  //   return response.status(401).json({error:"No autorizado"})
+  
+  // let decodedToken
+  // try {
+  //   decodedToken = jwt.verify(token, util.SECRET_FOR_JWT)
+  //   console.log(decodedToken)
+  // }catch (error) {
+  //   return response.status(401).json({error:"Sesion expirada"})
+  // }
+  
+  // if(!(decodedToken && decodedToken.username && decodedToken.id))
+  //   return response.status(401).json({error: "No autorizado"})
+  
+  // const user = await User.findOne({username: decodedToken.username})
 
-  console.log(decodedToken)
-  
-  if(!(decodedToken && decodedToken.username))
-    return response.status(401).json({error: "No autorizado"})
-  const user = await User.findOne({username: decodedToken.username})
+  const user = request.user
   
   const blog = new Blog({
     title: body.title,
-    // author: body.author,
-    author: user.name,
+    author: user.username,
     url: body.url,
     likes: body.likes,
-    user: user._id
+    user: user.id
   })  
 
   const savedBlog = await blog.save()
@@ -48,13 +53,46 @@ blogRouter.post('/', async (request, response) => {
   response.status(200).json(savedBlog)
 })
 
-// FUNCION PARA EXTRAER EL TOKEN DE LA REQUEST
-const getToken = (request) => {
-  const requestToken = request.get('authorization')
-  if(requestToken && requestToken.toLowerCase().startsWith('bearer '))
-    return requestToken.substring(7)
-  return null
-}
+// Actualizar Likes
+blogRouter.put('/:id', extractorUser , async (request, response) => {
+  const body = request.body
 
+  try {
+    const savedBlog = await Blog.findByIdAndUpdate(body._id, body, {new:true})
+    response.status(200).json(savedBlog)
+  } catch (error) {
+    response.status(401).json({error:"No es posible actualizar los likes"})
+  }
+  response.status(401).end()
+})
+
+// Borrar blog
+blogRouter.delete('/:id', extractorUser, async (request, response) => {
+  const id = request.params.id
+  
+  const user = request.user
+
+  console.log('USUARIO EXTRAIDO: ', user)
+  
+
+  let blogUserId
+  try {
+    const blog = await Blog.findById(id)
+    blogUserId = blog.user._id.toString()
+  } catch (error) {
+    return response.status(401).json({error:"Blog no encontrado"})
+  }
+  
+  if(blogUserId !== user.id)
+    return response.status(401).json({error:"Operacion de borardo no autorizada para este usuario"})
+
+  try {
+    await Blog.findByIdAndDelete(id)
+    return response.status(204).end()
+  } catch (error) {
+    return response.status(401).json({error:"No fue posible la eliminación del blog"})
+  }
+
+})
 
 module.exports = blogRouter
