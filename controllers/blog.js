@@ -69,7 +69,6 @@ blogRouter.put('/:id', extractorUser , async (request, response) => {
 // Borrar blog
 blogRouter.delete('/:id', extractorUser, async (request, response) => {
   const id = request.params.id
-  console.log('1', id)
   
   const user = request.user
 
